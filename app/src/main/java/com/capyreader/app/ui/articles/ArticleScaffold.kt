@@ -2,6 +2,7 @@ package com.capyreader.app.ui.articles
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -33,6 +34,9 @@ fun ArticleScaffold(
     drawerPane: @Composable () -> Unit,
     listPane: @Composable () -> Unit,
     detailPane: @Composable () -> Unit,
+    // Playback outlives whichever pane started it, so the player sits above the scaffold
+    // rather than inside a pane -- otherwise it disappears when the detail pane takes over.
+    audioPlayer: @Composable () -> Unit = {},
 ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -43,32 +47,37 @@ fun ArticleScaffold(
             }
         },
     ) {
-        ListDetailPaneScaffold(
-            directive = scaffoldNavigator.scaffoldDirective,
-            scaffoldState = scaffoldNavigator.scaffoldState,
-            paneExpansionDragHandle = { state ->
-                val interactionSource = remember { MutableInteractionSource() }
-                VerticalDragHandle(
-                    modifier = Modifier.paneExpansionDraggable(
-                        state,
-                        LocalMinimumInteractiveComponentSize.current,
-                        interactionSource,
-                    ),
-                    interactionSource = interactionSource,
-                )
-            },
-            paneExpansionState = paneExpansion.state,
-            listPane = {
-                CapyAnimatedPane {
-                    listPane()
+        Column {
+            ListDetailPaneScaffold(
+                modifier = Modifier.weight(1f),
+                directive = scaffoldNavigator.scaffoldDirective,
+                scaffoldState = scaffoldNavigator.scaffoldState,
+                paneExpansionDragHandle = { state ->
+                    val interactionSource = remember { MutableInteractionSource() }
+                    VerticalDragHandle(
+                        modifier = Modifier.paneExpansionDraggable(
+                            state,
+                            LocalMinimumInteractiveComponentSize.current,
+                            interactionSource,
+                        ),
+                        interactionSource = interactionSource,
+                    )
+                },
+                paneExpansionState = paneExpansion.state,
+                listPane = {
+                    CapyAnimatedPane {
+                        listPane()
+                    }
+                },
+                detailPane = {
+                    CapyAnimatedPane {
+                        detailPane()
+                    }
                 }
-            },
-            detailPane = {
-                CapyAnimatedPane {
-                    detailPane()
-                }
-            }
-        )
+            )
+
+            audioPlayer()
+        }
     }
 }
 

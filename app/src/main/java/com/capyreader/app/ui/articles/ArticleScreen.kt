@@ -484,6 +484,17 @@ fun ArticleScreen(
             drawerState = drawerState,
             scaffoldNavigator = scaffoldNavigator,
             paneExpansion = paneExpansion,
+            audioPlayer = {
+                audioEnclosure?.let { audio ->
+                    FloatingAudioPlayer(
+                        audio = audio,
+                        controller = audioController,
+                        onDismiss = {
+                            audioController.dismiss()
+                        },
+                    )
+                }
+            },
             drawerPane = {
                 FeedList(
                     source = viewModel.source,
@@ -571,17 +582,6 @@ fun ArticleScreen(
                                 )
                             }
                         },
-                        bottomBar = {
-                            audioEnclosure?.let { audio ->
-                                FloatingAudioPlayer(
-                                    audio = audio,
-                                    controller = audioController,
-                                    onDismiss = {
-                                        audioController.dismiss()
-                                    },
-                                )
-                            }
-                        }
                     ) { innerPadding ->
                         ArticleListScaffold(
                             padding = innerPadding,
