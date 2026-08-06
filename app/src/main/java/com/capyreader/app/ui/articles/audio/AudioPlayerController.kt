@@ -33,6 +33,11 @@ class AudioPlayerController(
     private var positionUpdateJob: Job? = null
     private val mainScope = CoroutineScope(Dispatchers.Main)
 
+    // Passages after the one playing. Only one is ever in the player, so the next is requested
+    // when playback reaches it rather than while the current one buffers -- abandoning a Spoken
+    // Article halfway never pays for the rest. See ADR-0001.
+    private var queuedUrls: List<String> = emptyList()
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
@@ -91,15 +96,26 @@ class AudioPlayerController(
                     _duration.value = controller.duration
                 }
                 if (playbackState == Player.STATE_ENDED) {
-                    _isPlaying.value = false
-                    controller.pause()
+                    val nextUrl = queuedUrls.firstOrNull()
+
+                    if (nextUrl == null) {
+                        _isPlaying.value = false
+                        controller.pause()
+                    } else {
+                        queuedUrls = queuedUrls.drop(1)
+                        load(controller, nextUrl)
+                    }
                 }
             }
         })
     }
 
+    /**
+     * Plays [audio]. A Spoken Article passes the URIs of its remaining Passages as [queuedUrls];
+     * each is loaded only once the one before it finishes.
+     */
     @OptIn(UnstableApi::class)
-    fun play(audio: AudioEnclosure) {
+    fun play(audio: AudioEnclosure, queuedUrls: List<String> = emptyList()) {
         mainScope.launch {
             val currentUrl = _currentAudio.value?.url
 
@@ -108,28 +124,38 @@ class AudioPlayerController(
                 return@launch
             }
 
+            this@AudioPlayerController.queuedUrls = queuedUrls
+
             ensureController { controller ->
-                val mediaItem = MediaItem.Builder()
-                    .setUri(audio.url)
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(audio.title)
-                            .setArtist(audio.feedName)
-                            .setArtworkUri(audio.artworkUrl?.let { Uri.parse(it) })
-                            .build()
-                    )
-                    .build()
-
-                controller.setMediaItem(mediaItem)
-                controller.prepare()
-                controller.playWhenReady = true
-
                 _currentAudio.value = audio
                 audio.durationSeconds?.let {
                     _duration.value = it * 1000
                 }
+
+                load(controller, audio.url)
             }
         }
+    }
+
+    private fun load(controller: MediaController, url: String) {
+        val audio = _currentAudio.value
+        val mediaItem = MediaItem.Builder()
+            .setUri(url)
+            // Pinned so a Spoken Article caches under its synthetic URI: the ResolvingDataSource
+            // rewrites the URI upstream, and without this the key would follow it.
+            .setCustomCacheKey(url)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(audio?.title)
+                    .setArtist(audio?.feedName)
+                    .setArtworkUri(audio?.artworkUrl?.let { Uri.parse(it) })
+                    .build()
+            )
+            .build()
+
+        controller.setMediaItem(mediaItem)
+        controller.prepare()
+        controller.playWhenReady = true
     }
 
     fun pause() {
@@ -177,6 +203,7 @@ class AudioPlayerController(
                 controller.stop()
                 controller.clearMediaItems()
             }
+            queuedUrls = emptyList()
             _currentAudio.value = null
             _isPlaying.value = false
             _currentPosition.value = 0L

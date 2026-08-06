@@ -4,10 +4,8 @@ import com.capyreader.app.common.AudioEnclosure
 import com.capyreader.app.preferences.AppPreferences
 import com.capyreader.app.ui.articles.audio.AudioPlayerController
 import com.jocmp.capy.Article
+import com.jocmp.capy.articles.passages
 import com.jocmp.capy.articles.speakableText
-
-// ponytail: first Passage only (~4,000 chars); slice 02 splits the rest into a playlist.
-private const val FIRST_PASSAGE_MAX_LENGTH = 4_000
 
 /**
  * Turns the article the reader is currently showing into a Spoken Article and hands it to the
@@ -27,26 +25,27 @@ class SpokenArticlePlayer(
             return
         }
 
-        val text = speakableText(article.content).take(FIRST_PASSAGE_MAX_LENGTH)
+        val passages = passages(speakableText(article.content))
 
-        if (text.isBlank()) {
+        if (passages.isEmpty()) {
             return
         }
 
-        val uri = OpenAISpeechProvider.registerPassage(
-            text = text,
+        val uris = OpenAISpeechProvider.registerPassages(
+            passages = passages,
             voice = voice,
             apiKey = apiKey,
         )
 
         audioController.play(
             AudioEnclosure(
-                url = uri,
+                url = uris.first(),
                 title = article.title,
                 feedName = article.feedName,
                 durationSeconds = null,
                 artworkUrl = null,
-            )
+            ),
+            queuedUrls = uris.drop(1),
         )
     }
 }

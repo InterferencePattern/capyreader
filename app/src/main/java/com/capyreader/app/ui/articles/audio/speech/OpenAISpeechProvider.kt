@@ -11,31 +11,36 @@ object OpenAISpeechProvider {
     private const val MODEL = "tts-1"
 
     /**
-     * Registers the POST that fetches this Passage and returns the synthetic URI to play. The
-     * URI hashes provider, model, voice, and text, so identical input hits the existing cache
-     * instead of paying again, and any change to the input misses it. See ADR-0001.
+     * Registers the POST that fetches each Passage and returns the synthetic URIs to play, in
+     * order. A URI hashes provider, model, voice, and text, so identical input hits the existing
+     * cache instead of paying again, and any change to the input misses it. See ADR-0001.
      */
-    fun registerPassage(text: String, voice: String, apiKey: String): String {
-        val uri = "$SPOKEN_ARTICLE_SCHEME://${MD5.from("openai|$MODEL|$voice|$text")}"
+    fun registerPassages(passages: List<String>, voice: String, apiKey: String): List<String> {
+        val uris = passages.map { text ->
+            "$SPOKEN_ARTICLE_SCHEME://${MD5.from("openai|$MODEL|$voice|$text")}"
+        }
 
+        SpeechPassageRegistry.register(
+            uris.zip(passages) { uri, text -> uri to request(text, voice, apiKey) }.toMap()
+        )
+
+        return uris
+    }
+
+    private fun request(text: String, voice: String, apiKey: String): SpeechPassageRequest {
         val body = buildJsonObject {
             put("model", MODEL)
             put("input", text)
             put("voice", voice)
         }.toString().toByteArray(Charsets.UTF_8)
 
-        SpeechPassageRegistry.register(
-            uri = uri,
-            request = SpeechPassageRequest(
-                url = ENDPOINT,
-                headers = mapOf(
-                    "Authorization" to "Bearer $apiKey",
-                    "Content-Type" to "application/json",
-                ),
-                body = body,
-            )
+        return SpeechPassageRequest(
+            url = ENDPOINT,
+            headers = mapOf(
+                "Authorization" to "Bearer $apiKey",
+                "Content-Type" to "application/json",
+            ),
+            body = body,
         )
-
-        return uri
     }
 }

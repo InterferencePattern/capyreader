@@ -23,6 +23,7 @@ import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.capyreader.app.R
+import com.capyreader.app.ui.articles.audio.speech.SpeechCacheFlagResolver
 import com.capyreader.app.ui.articles.audio.speech.SpeechDataSourceResolver
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -68,8 +69,15 @@ class MediaPlaybackService : MediaSessionService() {
                 }
             }
 
+        // Above the cache, so a Passage is still written to it despite its length being unknown
+        // until the download finishes.
+        val cacheableDataSourceFactory = ResolvingDataSource.Factory(
+            cacheDataSourceFactory,
+            SpeechCacheFlagResolver(),
+        )
+
         val mediaSourceFactory = DefaultMediaSourceFactory(this)
-            .setDataSourceFactory(cacheDataSourceFactory)
+            .setDataSourceFactory(cacheableDataSourceFactory)
 
         val exoPlayer = ExoPlayer.Builder(this)
             .setMediaSourceFactory(mediaSourceFactory)

@@ -30,3 +30,27 @@ class SpeechDataSourceResolver : ResolvingDataSource.Resolver {
             .build()
     }
 }
+
+/**
+ * Lets a Passage be cached even though its length is unknown until it finishes downloading.
+ *
+ * Progressive playback asks for `FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN`, and `CacheDataSink` honours
+ * it by silently discarding every write -- so a Speech Provider streaming a Passage chunked would
+ * be paid for again on every replay. The flag exists to avoid caching a stream that never ends;
+ * a Passage does end, and its synthetic URI already hashes everything that determines the audio.
+ *
+ * Must sit above [androidx.media3.datasource.cache.CacheDataSource]: the sink reads these flags
+ * when it opens, which is before [SpeechDataSourceResolver] rewrites anything.
+ */
+@UnstableApi
+class SpeechCacheFlagResolver : ResolvingDataSource.Resolver {
+    override fun resolveDataSpec(dataSpec: DataSpec): DataSpec {
+        if (dataSpec.uri.scheme != SPOKEN_ARTICLE_SCHEME) {
+            return dataSpec
+        }
+
+        return dataSpec.buildUpon()
+            .setFlags(dataSpec.flags and DataSpec.FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN.inv())
+            .build()
+    }
+}

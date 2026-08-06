@@ -10,20 +10,22 @@ class SpeechPassageRequest(
 )
 
 /**
- * Holds the request for the synthetic `capytts://` URI the player is about to fetch, so
+ * Holds the requests for the synthetic `capytts://` URIs the player may fetch, so
  * [SpeechDataSourceResolver] can turn a playlist item into a real POST. In-memory only:
  * `MediaPlaybackService` runs in the same process as the rest of the app, so this is shared
  * without needing IPC.
+ *
+ * Registering a Spoken Article costs nothing and sends nothing -- only the Passages playback
+ * actually reaches are ever requested.
  */
-// ponytail: one Passage in flight at a time; slice 02's playlist turns this back into a map.
 object SpeechPassageRegistry {
     @Volatile
-    private var pending: Pair<String, SpeechPassageRequest>? = null
+    private var pending: Map<String, SpeechPassageRequest> = emptyMap()
 
-    fun register(uri: String, request: SpeechPassageRequest) {
-        pending = uri to request
+    /** Replaces every pending request: only one Spoken Article is ever queued at a time. */
+    fun register(requests: Map<String, SpeechPassageRequest>) {
+        pending = requests
     }
 
-    fun resolve(uri: String): SpeechPassageRequest? =
-        pending?.takeIf { it.first == uri }?.second
+    fun resolve(uri: String): SpeechPassageRequest? = pending[uri]
 }
