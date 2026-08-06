@@ -362,11 +362,17 @@
     <string name="audio_player_error_open_settings">Settings</string>
     <string name="listen_error_missing_credentials">Add an API key in Listen settings to hear articles.</string>
     <string name="listen_error_no_text">This article has no text to read aloud.</string>
+    <string name="listen_error_missing_voice">Choose a voice in Listen settings to hear articles.</string>
+    <string name="listen_error_invalid_base_url">Add a valid base URL in Listen settings to hear articles.</string>
     <string name="settings_section_listen_speech">Speech</string>
     <string name="settings_listen_provider_label">Provider</string>
     <string name="settings_listen_provider_openai">OpenAI</string>
     <string name="settings_listen_provider_elevenlabs">ElevenLabs</string>
+    <string name="settings_listen_provider_openai_compatible">OpenAI-compatible</string>
     <string name="settings_listen_api_key_label">API Key</string>
+    <string name="settings_listen_api_key_optional_label">API Key (optional)</string>
+    <string name="settings_listen_base_url_label">Base URL</string>
+    <string name="settings_listen_base_url_hint">http://192.168.1.10:8880/v1</string>
     <string name="settings_listen_voice_label">Voice</string>
     <string name="settings_listen_voice_id_label">Voice ID</string>
     <string name="settings_listen_disclosure">When you tap Listen, the article text currently shown is sent to %1$s to generate speech.</string>

@@ -25,13 +25,14 @@ class SpokenArticlePlayer(
     @StringRes
     fun play(article: Article): Int? {
         val provider = SpeechProvider.from(appPreferences.speechOptions.provider.get())
-        val apiKey = appPreferences.speechOptions.getApiKey(provider).get()
-        val voice = appPreferences.speechOptions.getVoice(provider).get()
+        val settings = SpeechSettings(
+            voice = appPreferences.speechOptions.getVoice(provider).get(),
+            apiKey = appPreferences.speechOptions.getApiKey(provider).get(),
+            baseUrl = appPreferences.speechOptions.getBaseUrl(provider).get(),
+        )
 
-        // Inert without credentials: no request is built, so no article text leaves the device.
-        if (apiKey.isBlank() || voice.isBlank()) {
-            return R.string.listen_error_missing_credentials
-        }
+        // Inert until configured: no request is built, so no article text leaves the device.
+        provider.configurationError(settings)?.let { return it }
 
         val passages = passages(speakableText(article.content))
 
@@ -41,8 +42,7 @@ class SpokenArticlePlayer(
 
         val uris = provider.registerPassages(
             passages = passages,
-            voice = voice,
-            apiKey = apiKey,
+            settings = settings,
         )
 
         audioController.play(

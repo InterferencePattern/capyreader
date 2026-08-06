@@ -214,5 +214,9 @@ class AppPreferences(context: Context) {
 
         fun getVoice(provider: SpeechProvider): Preference<String> =
             preferenceStore.getString("speech_${provider.id}_voice")
+
+        /** Only a provider with [SpeechProvider.usesBaseUrl] reads this. */
+        fun getBaseUrl(provider: SpeechProvider): Preference<String> =
+            preferenceStore.getString("speech_${provider.id}_base_url")
     }
 }

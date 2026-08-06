@@ -24,20 +24,21 @@ object OpenAISpeechProvider : SpeechProvider {
 
     override val voiceLabel = R.string.settings_listen_voice_label
 
-    override fun audioSignature(voice: String) = "$MODEL|$voice|$INSTRUCTIONS"
+    override fun audioSignature(settings: SpeechSettings) =
+        "$MODEL|${settings.voice}|$INSTRUCTIONS"
 
-    override fun request(text: String, voice: String, apiKey: String): SpeechPassageRequest {
+    override fun request(text: String, settings: SpeechSettings): SpeechPassageRequest {
         val body = buildJsonObject {
             put("model", MODEL)
             put("input", text)
-            put("voice", voice)
+            put("voice", settings.voice)
             put("instructions", INSTRUCTIONS)
         }.toString().toByteArray(Charsets.UTF_8)
 
         return SpeechPassageRequest(
             url = ENDPOINT,
             headers = mapOf(
-                "Authorization" to "Bearer $apiKey",
+                "Authorization" to "Bearer ${settings.apiKey}",
                 "Content-Type" to "application/json",
             ),
             body = body,

@@ -39,6 +39,8 @@ fun ListenSettingsPanel(
         updateApiKey = viewModel::updateApiKey,
         voice = viewModel.voice,
         updateVoice = viewModel::updateVoice,
+        baseUrl = viewModel.baseUrl,
+        updateBaseUrl = viewModel::updateBaseUrl,
     )
 }
 
@@ -50,6 +52,8 @@ fun ListenSettingsPanelView(
     updateApiKey: (String) -> Unit,
     voice: String,
     updateVoice: (String) -> Unit,
+    baseUrl: String,
+    updateBaseUrl: (String) -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -63,13 +67,33 @@ fun ListenSettingsPanelView(
                 optionText = { stringResource(it.title) },
                 label = R.string.settings_listen_provider_label,
             )
+            if (provider.usesBaseUrl) {
+                RowItem {
+                    TextField(
+                        value = baseUrl,
+                        onValueChange = updateBaseUrl,
+                        singleLine = true,
+                        label = {
+                            Text(stringResource(R.string.settings_listen_base_url_label))
+                        },
+                        placeholder = {
+                            Text(stringResource(R.string.settings_listen_base_url_hint))
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Uri,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
             RowItem {
                 TextField(
                     value = apiKey,
                     onValueChange = updateApiKey,
                     singleLine = true,
                     label = {
-                        Text(stringResource(R.string.settings_listen_api_key_label))
+                        Text(stringResource(provider.apiKeyLabel))
                     },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next,
@@ -96,9 +120,12 @@ fun ListenSettingsPanelView(
             }
             RowItem {
                 Text(
+                    // Named by address when the reader chose the address: "an OpenAI-compatible
+                    // server" would not tell them where their article text is going.
                     text = stringResource(
                         R.string.settings_listen_disclosure,
-                        stringResource(provider.title),
+                        if (provider.usesBaseUrl) baseUrl.ifBlank { stringResource(provider.title) }
+                        else stringResource(provider.title),
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -120,6 +147,8 @@ private fun ListenSettingsPanelPreview() {
             updateApiKey = {},
             voice = "alloy",
             updateVoice = {},
+            baseUrl = "",
+            updateBaseUrl = {},
         )
     }
 }

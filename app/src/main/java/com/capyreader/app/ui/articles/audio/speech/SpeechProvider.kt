@@ -1,8 +1,20 @@
 package com.capyreader.app.ui.articles.audio.speech
 
 import androidx.annotation.StringRes
+import com.capyreader.app.R
 import com.capyreader.app.common.MD5
 import com.capyreader.app.common.SPOKEN_ARTICLE_SCHEME
+
+/**
+ * Everything the reader configures about a Speech Provider. Providers use the parts they have a
+ * use for: [baseUrl] means nothing to a provider whose endpoint is fixed, and [apiKey] means
+ * nothing to a self-hosted server that asks for no credentials.
+ */
+data class SpeechSettings(
+    val voice: String,
+    val apiKey: String,
+    val baseUrl: String = "",
+)
 
 /**
  * The third-party service that turns Speakable Text into audio. Each one owns its endpoint, its
@@ -26,15 +38,43 @@ interface SpeechProvider {
     @get:StringRes
     val voiceLabel: Int
 
-    /** Everything besides the text that determines the audio: model, voice, tone. */
-    fun audioSignature(voice: String): String
+    @get:StringRes
+    val apiKeyLabel: Int
+        get() = R.string.settings_listen_api_key_label
 
-    fun request(text: String, voice: String, apiKey: String): SpeechPassageRequest
+    /** Whether the reader supplies the endpoint. Only true for a provider Capy cannot name. */
+    val usesBaseUrl: Boolean
+        get() = false
+
+    /** Everything besides the text that determines the audio: model, voice, tone. */
+    fun audioSignature(settings: SpeechSettings): String
+
+    fun request(text: String, settings: SpeechSettings): SpeechPassageRequest
+
+    /**
+     * Null when the provider can be asked to speak, or the message explaining what is missing.
+     * Checked before any request is built, so a misconfigured provider never sees article text.
+     */
+    @StringRes
+    fun configurationError(settings: SpeechSettings): Int? = when {
+        settings.apiKey.isBlank() -> R.string.listen_error_missing_credentials
+        settings.voice.isBlank() -> R.string.listen_error_missing_voice
+        else -> null
+    }
 
     companion object {
-        val all = listOf(OpenAISpeechProvider, ElevenLabsSpeechProvider)
+        // Built on each read rather than held: this interface has default methods, so loading any
+        // provider loads the companion first, and a stored list would capture the provider that
+        // is still mid-initialization as null.
+        val all: List<SpeechProvider>
+            get() = listOf(
+                OpenAISpeechProvider,
+                ElevenLabsSpeechProvider,
+                OpenAICompatibleSpeechProvider,
+            )
 
-        val default = OpenAISpeechProvider
+        val default: SpeechProvider
+            get() = OpenAISpeechProvider
 
         /** Falls back to [default] so an unknown stored id can never leave Listen unusable. */
         fun from(id: String) = all.find { it.id == id } ?: default
@@ -49,15 +89,14 @@ interface SpeechProvider {
  */
 fun SpeechProvider.registerPassages(
     passages: List<String>,
-    voice: String,
-    apiKey: String,
+    settings: SpeechSettings,
 ): List<String> {
     val uris = passages.map { text ->
-        "$SPOKEN_ARTICLE_SCHEME://${MD5.from("$id|${audioSignature(voice)}|$text")}"
+        "$SPOKEN_ARTICLE_SCHEME://${MD5.from("$id|${audioSignature(settings)}|$text")}"
     }
 
     SpeechPassageRegistry.register(
-        uris.zip(passages) { uri, text -> uri to request(text, voice, apiKey) }.toMap()
+        uris.zip(passages) { uri, text -> uri to request(text, settings) }.toMap()
     )
 
     return uris

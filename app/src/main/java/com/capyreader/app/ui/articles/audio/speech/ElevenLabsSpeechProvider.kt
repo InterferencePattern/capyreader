@@ -18,18 +18,18 @@ object ElevenLabsSpeechProvider : SpeechProvider {
 
     // No equivalent of OpenAI's `instructions`: tone on this model comes from the Voice itself,
     // so the newscaster steering has nothing to hash here.
-    override fun audioSignature(voice: String) = "$MODEL|$voice"
+    override fun audioSignature(settings: SpeechSettings) = "$MODEL|${settings.voice}"
 
-    override fun request(text: String, voice: String, apiKey: String): SpeechPassageRequest {
+    override fun request(text: String, settings: SpeechSettings): SpeechPassageRequest {
         val body = buildJsonObject {
             put("text", text)
             put("model_id", MODEL)
         }.toString().toByteArray(Charsets.UTF_8)
 
         return SpeechPassageRequest(
-            url = "$ENDPOINT/$voice",
+            url = "$ENDPOINT/${settings.voice}",
             headers = mapOf(
-                "xi-api-key" to apiKey,
+                "xi-api-key" to settings.apiKey,
                 "Content-Type" to "application/json",
                 "Accept" to "audio/mpeg",
             ),

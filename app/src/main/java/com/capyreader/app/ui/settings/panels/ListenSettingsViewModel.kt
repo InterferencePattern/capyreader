@@ -19,6 +19,9 @@ class ListenSettingsViewModel(
     var voice by mutableStateOf(appPreferences.speechOptions.getVoice(provider).get())
         private set
 
+    var baseUrl by mutableStateOf(appPreferences.speechOptions.getBaseUrl(provider).get())
+        private set
+
     fun updateProvider(value: SpeechProvider) {
         appPreferences.speechOptions.provider.set(value.id)
 
@@ -28,6 +31,7 @@ class ListenSettingsViewModel(
         // rather than carrying over a key it would only reject.
         apiKey = appPreferences.speechOptions.getApiKey(value).get()
         voice = appPreferences.speechOptions.getVoice(value).get()
+        baseUrl = appPreferences.speechOptions.getBaseUrl(value).get()
     }
 
     fun updateApiKey(value: String) {
@@ -40,5 +44,11 @@ class ListenSettingsViewModel(
         appPreferences.speechOptions.getVoice(provider).set(value)
 
         voice = value
+    }
+
+    fun updateBaseUrl(value: String) {
+        appPreferences.speechOptions.getBaseUrl(provider).set(value)
+
+        baseUrl = value
     }
 }
