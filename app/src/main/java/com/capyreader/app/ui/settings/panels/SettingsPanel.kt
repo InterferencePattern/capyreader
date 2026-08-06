@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Gesture
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Palette
@@ -44,6 +45,11 @@ sealed class SettingsPanel(@StringRes val title: Int) {
     }
 
     @Parcelize
+    data object Listen : SettingsPanel(title = R.string.settings_panel_listen_title), Parcelable {
+        override fun icon() = Icons.Rounded.Headphones
+    }
+
+    @Parcelize
     data object About : SettingsPanel(title = R.string.settings_about_title), Parcelable {
         override fun icon() = Icons.Rounded.Info
     }
@@ -68,6 +74,7 @@ sealed class SettingsPanel(@StringRes val title: Int) {
                 General,
                 Display,
                 Gestures,
+                Listen,
                 Account,
                 About,
             )

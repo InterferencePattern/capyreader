@@ -62,6 +62,7 @@ import com.capyreader.app.ui.LocalTimeFormats
 import com.capyreader.app.ui.LocalUnreadCount
 import com.capyreader.app.ui.articles.audio.AudioPlayerController
 import com.capyreader.app.ui.articles.audio.FloatingAudioPlayer
+import com.capyreader.app.ui.articles.audio.speech.SpokenArticlePlayer
 import com.capyreader.app.ui.articles.detail.ArticleView
 import com.capyreader.app.ui.articles.detail.CapyPlaceholder
 import com.capyreader.app.ui.articles.feeds.AngleRefreshState
@@ -645,6 +646,7 @@ fun ArticleScreen(
                 } else if (article != null) {
                     val isAudioPlaying by audioController.isPlaying.collectAsState()
                     val currentAudio by audioController.currentAudio.collectAsState()
+                    val spokenArticlePlayer: SpokenArticlePlayer = koinInject()
 
                     ArticleView(
                         article = article,
@@ -665,6 +667,9 @@ fun ArticleScreen(
                         },
                         onPauseAudio = {
                             audioController.pause()
+                        },
+                        onListen = {
+                            spokenArticlePlayer.play(article)
                         },
                         onSelectArticle = { articleID ->
                             setArticle(articleID)

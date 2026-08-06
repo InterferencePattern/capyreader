@@ -17,6 +17,14 @@ data class AudioEnclosure(
     companion object
 }
 
+// A Spoken Article is represented by this same type with a synthetic `capytts://` URL --
+// see CONTEXT.md. The floating player uses this scheme, not missing duration metadata, to
+// decide whether a seek bar makes sense.
+const val SPOKEN_ARTICLE_SCHEME = "capytts"
+
+val AudioEnclosure.isSpokenArticle: Boolean
+    get() = url.startsWith("$SPOKEN_ARTICLE_SCHEME://")
+
 val AudioEnclosure.Companion.Saver
     get() = Saver<MutableState<AudioEnclosure?>, String>(
         save = { state ->

@@ -61,6 +61,7 @@ fun ArticleView(
     onSelectMedia: (media: Media) -> Unit,
     onSelectAudio: (audio: AudioEnclosure) -> Unit = {},
     onPauseAudio: () -> Unit = {},
+    onListen: () -> Unit,
     currentAudioUrl: String? = null,
     isAudioPlaying: Boolean = false,
     isFullscreen: Boolean = false,
@@ -198,6 +199,7 @@ fun ArticleView(
                 onToggleRead = onToggleRead,
                 onToggleStar = onToggleStar,
                 onSelectNext = { selectNext() },
+                onListen = onListen,
             )
 
             SnackbarHost(

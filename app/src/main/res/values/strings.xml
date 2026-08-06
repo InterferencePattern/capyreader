@@ -213,6 +213,7 @@
     <string name="settings_panel_display_title">Display &amp; Appearance</string>
     <string name="settings_panel_notifications_title">Notifications</string>
     <string name="settings_panel_gestures_title">Gestures</string>
+    <string name="settings_panel_listen_title">Listen</string>
     <string name="settings_account_title">Account</string>
     <string name="settings_about_title">About</string>
     <string name="settings_list_top_bar_title">Settings</string>
@@ -240,6 +241,7 @@
     <string name="settings_options_reader_pin_top_toolbar">Pin Toolbars</string>
 
     <string name="article_bottom_bar_next_article">Go to next article</string>
+    <string name="article_bottom_bar_listen">Listen</string>
     <string name="settings_gestures_reader_swipe_down">Swipe Down</string>
     <string name="settings_gestures_reader_swipe_up">Swipe Up</string>
     <string name="settings_gestures_list_row_swipe_start">Swipe Right</string>
@@ -353,6 +355,10 @@
     <string name="audio_player_close">Close player</string>
     <string name="audio_player_skip_back">Skip back 30 seconds</string>
     <string name="audio_player_skip_forward">Skip forward 30 seconds</string>
+    <string name="settings_section_listen_openai">OpenAI</string>
+    <string name="settings_listen_api_key_label">API Key</string>
+    <string name="settings_listen_voice_label">Voice</string>
+    <string name="settings_listen_disclosure">When you tap Listen, the article text currently shown is sent to OpenAI to generate speech.</string>
     <string name="settings_panel_unread_counts_title">Unread Badges</string>
     <string name="settings_option_badge_style">Badge style</string>
     <string name="badge_style_simple">Simple</string>

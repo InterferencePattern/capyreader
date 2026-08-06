@@ -28,6 +28,8 @@ class AppPreferences(context: Context) {
 
     val articleListOptions = ArticleListOptions(preferenceStore)
 
+    val speechOptions = SpeechOptions(preferenceStore)
+
     val isLoggedIn
         get() = accountID.get().isNotBlank()
 
@@ -197,5 +199,15 @@ class AppPreferences(context: Context) {
         val markReadOnScroll: Preference<Boolean>
             get() = preferenceStore.getBoolean("article_list_mark_read_on_scroll", false)
 
+    }
+
+    // Credentials for the single hardcoded Speech Provider (OpenAI). The feature is inert
+    // until both are set -- no article text is sent anywhere by default.
+    class SpeechOptions(private val preferenceStore: PreferenceStore) {
+        val apiKey: Preference<String>
+            get() = preferenceStore.getString("speech_openai_api_key")
+
+        val voice: Preference<String>
+            get() = preferenceStore.getString("speech_voice")
     }
 }

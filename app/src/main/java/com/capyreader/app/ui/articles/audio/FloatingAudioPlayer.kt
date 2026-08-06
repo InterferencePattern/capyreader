@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.capyreader.app.R
 import com.capyreader.app.common.AudioEnclosure
+import com.capyreader.app.common.isSpokenArticle
 import com.capyreader.app.ui.theme.CapyTheme
 
 @Composable
@@ -157,48 +158,54 @@ internal fun FloatingAudioPlayer(
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = formatDuration(currentPosition),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                val interactionSource = remember { MutableInteractionSource() }
-                Slider(
-                    value = if (duration > 0) currentPosition / duration.toFloat() else 0f,
-                    onValueChange = { fraction ->
-                        onSeek((fraction * duration).toLong())
-                    },
-                    interactionSource = interactionSource,
-                    thumb = {
-                        SliderDefaults.Thumb(
-                            interactionSource = interactionSource,
-                            thumbSize = DpSize(width = 4.dp, height = 24.dp),
-                        )
-                    },
-                    track = { sliderState ->
-                        SliderDefaults.Track(
-                            sliderState = sliderState,
-                            drawStopIndicator = null,
-                            thumbTrackGapSize = 4.dp,
-                        )
-                    },
+            // Spoken articles have no seek bar: the player only ever knows the duration of the
+            // current Passage, not the whole article. This is decided from the URI scheme, not
+            // from missing duration metadata -- a podcast enclosure with no duration is still
+            // scrubbable. See ADR-0001.
+            if (!audio.isSpokenArticle) {
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp),
-                )
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = formatDuration(currentPosition),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
 
-                Text(
-                    text = formatDuration(duration),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                    val interactionSource = remember { MutableInteractionSource() }
+                    Slider(
+                        value = if (duration > 0) currentPosition / duration.toFloat() else 0f,
+                        onValueChange = { fraction ->
+                            onSeek((fraction * duration).toLong())
+                        },
+                        interactionSource = interactionSource,
+                        thumb = {
+                            SliderDefaults.Thumb(
+                                interactionSource = interactionSource,
+                                thumbSize = DpSize(width = 4.dp, height = 24.dp),
+                            )
+                        },
+                        track = { sliderState ->
+                            SliderDefaults.Track(
+                                sliderState = sliderState,
+                                drawStopIndicator = null,
+                                thumbTrackGapSize = 4.dp,
+                            )
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
+                    )
+
+                    Text(
+                        text = formatDuration(duration),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -254,6 +261,28 @@ private fun FloatingAudioPlayerPreview_Playing() {
             isPlaying = true,
             currentPosition = 1800_000,
             duration = 3600_000,
+            onPlayPause = {},
+            onSeek = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun FloatingAudioPlayerPreview_SpokenArticle() {
+    CapyTheme {
+        FloatingAudioPlayer(
+            audio = AudioEnclosure(
+                url = "capytts://abc123",
+                title = "How Capy Reader Handles Speech",
+                feedName = "The Verge",
+                durationSeconds = null,
+                artworkUrl = null,
+            ),
+            isPlaying = true,
+            currentPosition = 0,
+            duration = 0,
             onPlayPause = {},
             onSeek = {},
             onDismiss = {},

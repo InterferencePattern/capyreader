@@ -9,6 +9,7 @@ import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
@@ -22,6 +23,7 @@ import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.capyreader.app.R
+import com.capyreader.app.ui.articles.audio.speech.SpeechDataSourceResolver
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -51,8 +53,15 @@ class MediaPlaybackService : MediaSessionService() {
 
         val okHttpClient = baseHttpClient()
         val okHttpDataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
+        // Rewrites a Spoken Article's synthetic `capytts://` playlist item into the POST that
+        // fetches its Passage audio; podcast enclosure URLs pass through unchanged. See
+        // ADR-0001.
+        val resolvingDataSourceFactory = ResolvingDataSource.Factory(
+            okHttpDataSourceFactory,
+            SpeechDataSourceResolver(),
+        )
         val cacheDataSourceFactory = CacheDataSource.Factory()
-            .setUpstreamDataSourceFactory(okHttpDataSourceFactory)
+            .setUpstreamDataSourceFactory(resolvingDataSourceFactory)
             .also { factory ->
                 cache?.let {
                     factory.setCache(it)

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FiberManualRecord
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.FiberManualRecord
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarOutline
@@ -54,6 +55,7 @@ fun ArticleBottomBar(
     onToggleRead: () -> Unit,
     onToggleStar: () -> Unit,
     onSelectNext: () -> Unit,
+    onListen: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -132,6 +134,18 @@ fun ArticleBottomBar(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
+                    }
+                }
+                ToolbarTooltip(
+                    positioning = TooltipAnchorPosition.Above,
+                    message = stringResource(R.string.article_bottom_bar_listen)
+                ) {
+                    IconButton(onClick = { onListen() }) {
+                        Icon(
+                            Icons.Rounded.Headphones,
+                            contentDescription = stringResource(R.string.article_bottom_bar_listen),
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
                 ToolbarTooltip(

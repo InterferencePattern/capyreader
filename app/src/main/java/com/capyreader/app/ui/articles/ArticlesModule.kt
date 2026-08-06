@@ -5,6 +5,7 @@ import com.capyreader.app.R
 import com.capyreader.app.preferences.AppPreferences
 import com.capyreader.app.ui.addintent.AddLinkViewModel
 import com.capyreader.app.ui.articles.audio.AudioPlayerController
+import com.capyreader.app.ui.articles.audio.speech.SpokenArticlePlayer
 import com.capyreader.app.ui.articles.feeds.edit.EditFeedViewModel
 import com.jocmp.capy.articles.ArticleRenderer
 import com.jocmp.capy.articles.AudioPlayerLabels
@@ -25,6 +26,12 @@ internal val articlesModule = module {
     single {
         AudioPlayerController(
             context = get()
+        )
+    }
+    single {
+        SpokenArticlePlayer(
+            appPreferences = get(),
+            audioController = get(),
         )
     }
     single {
