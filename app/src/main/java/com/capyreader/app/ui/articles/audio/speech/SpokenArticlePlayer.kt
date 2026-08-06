@@ -1,5 +1,7 @@
 package com.capyreader.app.ui.articles.audio.speech
 
+import androidx.annotation.StringRes
+import com.capyreader.app.R
 import com.capyreader.app.common.AudioEnclosure
 import com.capyreader.app.preferences.AppPreferences
 import com.capyreader.app.ui.articles.audio.AudioPlayerController
@@ -16,19 +18,24 @@ class SpokenArticlePlayer(
     private val appPreferences: AppPreferences,
     private val audioController: AudioPlayerController,
 ) {
-    fun play(article: Article) {
+    /**
+     * Returns null once playback has started, or the message explaining why nothing will play.
+     * Neither refusal reaches the Speech Provider, so neither shows up as a playback error.
+     */
+    @StringRes
+    fun play(article: Article): Int? {
         val apiKey = appPreferences.speechOptions.apiKey.get()
         val voice = appPreferences.speechOptions.voice.get()
 
         // Inert without credentials: no request is built, so no article text leaves the device.
         if (apiKey.isBlank() || voice.isBlank()) {
-            return
+            return R.string.listen_error_missing_credentials
         }
 
         val passages = passages(speakableText(article.content))
 
         if (passages.isEmpty()) {
-            return
+            return R.string.listen_error_no_text
         }
 
         val uris = OpenAISpeechProvider.registerPassages(
@@ -47,5 +54,7 @@ class SpokenArticlePlayer(
             ),
             queuedUrls = uris.drop(1),
         )
+
+        return null
     }
 }

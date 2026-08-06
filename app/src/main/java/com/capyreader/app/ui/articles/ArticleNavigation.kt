@@ -15,7 +15,12 @@ fun NavGraphBuilder.articleGraph(
             pendingArticleID = pendingArticleID,
             onPendingArticleSelected = onPendingArticleSelected,
             onNavigateToSettings = {
-                navController.navigate(Route.Settings) {
+                navController.navigate(Route.Settings()) {
+                    launchSingleTop = true
+                }
+            },
+            onNavigateToListenSettings = {
+                navController.navigate(Route.Settings(openListenPanel = true)) {
                     launchSingleTop = true
                 }
             }

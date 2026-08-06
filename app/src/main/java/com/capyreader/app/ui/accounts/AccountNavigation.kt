@@ -2,8 +2,10 @@ package com.capyreader.app.ui.accounts
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.capyreader.app.ui.Route
 import com.capyreader.app.ui.settings.SettingsScreen
+import com.capyreader.app.ui.settings.panels.SettingsPanel
 import com.jocmp.capy.accounts.Source
 
 fun NavGraphBuilder.accountsGraph(
@@ -24,8 +26,11 @@ fun NavGraphBuilder.accountsGraph(
             onSuccess = onAddSuccess,
         )
     }
-    composable<Route.Settings> {
+    composable<Route.Settings> { entry ->
+        val route = entry.toRoute<Route.Settings>()
+
         SettingsScreen(
+            initialPanel = SettingsPanel.Listen.takeIf { route.openListenPanel },
             onRemoveAccount = onRemoveAccount,
             onNavigateBack = onNavigateBack
         )

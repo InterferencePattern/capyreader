@@ -11,7 +11,7 @@ sealed class Route {
     data class Login(val source: Source) : Route()
 
     @Serializable
-    data object Settings : Route()
+    data class Settings(val openListenPanel: Boolean = false) : Route()
 
     @Serializable
     data object Articles : Route()

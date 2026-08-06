@@ -117,6 +117,7 @@ fun ArticleScreen(
     pendingArticleID: String? = null,
     onPendingArticleSelected: () -> Unit = {},
     onNavigateToSettings: () -> Unit,
+    onNavigateToListenSettings: () -> Unit,
 ) {
     val currentFeed by viewModel.currentFeed.collectAsStateWithLifecycle(initialValue = null)
     val feeds by viewModel.topLevelFeeds.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -492,6 +493,7 @@ fun ArticleScreen(
                         onDismiss = {
                             audioController.dismiss()
                         },
+                        onNavigateToListenSettings = onNavigateToListenSettings,
                     )
                 }
             },
@@ -669,7 +671,9 @@ fun ArticleScreen(
                             audioController.pause()
                         },
                         onListen = {
-                            spokenArticlePlayer.play(article)
+                            spokenArticlePlayer.play(article)?.let { message ->
+                                showSnackbar(context.getString(message))
+                            }
                         },
                         onSelectArticle = { articleID ->
                             setArticle(articleID)

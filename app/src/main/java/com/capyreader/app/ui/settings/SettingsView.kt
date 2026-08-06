@@ -7,6 +7,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
@@ -47,13 +49,17 @@ import org.koin.compose.koinInject
 @Composable
 fun SettingsView(
     viewModel: SettingsViewModel = koinInject(),
+    initialPanel: SettingsPanel? = null,
     onNavigateBack: () -> Unit,
     onRemoveAccount: () -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val navigator = rememberListDetailPaneScaffoldNavigator<SettingsPanel>(
-
+    val navigator = rememberListDetailPaneScaffoldNavigator(
+        initialDestinationHistory = listOfNotNull(
+            ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List),
+            initialPanel?.let { ThreePaneScaffoldDestinationItem(ThreePaneScaffoldRole.Primary, it) },
+        )
     )
     val currentPanel = navigator.currentDestination?.contentKey
     val feeds by viewModel.feeds.collectAsStateWithLifecycle(emptyList())

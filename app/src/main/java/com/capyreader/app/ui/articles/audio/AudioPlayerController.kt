@@ -8,6 +8,7 @@ import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
@@ -49,6 +50,9 @@ class AudioPlayerController(
 
     private val _currentAudio = MutableStateFlow<AudioEnclosure?>(null)
     val currentAudio: StateFlow<AudioEnclosure?> = _currentAudio.asStateFlow()
+
+    private val _playbackError = MutableStateFlow<PlaybackError?>(null)
+    val playbackError: StateFlow<PlaybackError?> = _playbackError.asStateFlow()
 
     private fun ensureController(onReady: (MediaController) -> Unit) {
         mediaController?.let {
@@ -107,6 +111,16 @@ class AudioPlayerController(
                     }
                 }
             }
+
+            override fun onPlayerError(error: PlaybackException) {
+                CapyLog.error("audio_player", error)
+
+                // Not retried automatically: against an exhausted quota that is another paid
+                // request which fails the same way, and it delays an honest message by seconds.
+                // The remaining Passages are kept so a manual retry picks the article back up.
+                _isPlaying.value = false
+                _playbackError.value = PlaybackError.from(error)
+            }
         })
     }
 
@@ -120,10 +134,11 @@ class AudioPlayerController(
             val currentUrl = _currentAudio.value?.url
 
             if (currentUrl == audio.url && mediaController?.isConnected == true) {
-                mediaController?.play()
+                resume()
                 return@launch
             }
 
+            _playbackError.value = null
             this@AudioPlayerController.queuedUrls = queuedUrls
 
             ensureController { controller ->
@@ -164,8 +179,16 @@ class AudioPlayerController(
         }
     }
 
+    /** Doubles as the retry: after an error the failed item is still loaded. */
     fun resume() {
         mainScope.launch {
+            if (_playbackError.value != null) {
+                _playbackError.value = null
+                // Resumes at the Passage that failed. Everything before it is already in the
+                // media cache under its content hash, so nothing played is paid for twice.
+                mediaController?.prepare()
+            }
+
             mediaController?.play()
         }
     }
@@ -205,6 +228,7 @@ class AudioPlayerController(
             }
             queuedUrls = emptyList()
             _currentAudio.value = null
+            _playbackError.value = null
             _isPlaying.value = false
             _currentPosition.value = 0L
             _duration.value = 0L

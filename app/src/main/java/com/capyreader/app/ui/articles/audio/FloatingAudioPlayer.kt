@@ -29,6 +29,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,19 +54,24 @@ fun FloatingAudioPlayer(
     audio: AudioEnclosure,
     controller: AudioPlayerController,
     onDismiss: () -> Unit,
+    onNavigateToListenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isPlaying by controller.isPlaying.collectAsState()
     val currentPosition by controller.currentPosition.collectAsState()
     val duration by controller.duration.collectAsState()
+    val error by controller.playbackError.collectAsState()
 
     FloatingAudioPlayer(
         audio = audio,
         isPlaying = isPlaying,
         currentPosition = currentPosition,
         duration = duration,
+        error = error,
         onPlayPause = { if (isPlaying) controller.pause() else controller.resume() },
         onSeek = { controller.seekTo(it) },
+        onRetry = { controller.resume() },
+        onNavigateToListenSettings = onNavigateToListenSettings,
         onDismiss = onDismiss,
         modifier = modifier,
     )
@@ -78,8 +84,11 @@ internal fun FloatingAudioPlayer(
     isPlaying: Boolean,
     currentPosition: Long,
     duration: Long,
+    error: PlaybackError?,
     onPlayPause: () -> Unit,
     onSeek: (Long) -> Unit,
+    onRetry: () -> Unit,
+    onNavigateToListenSettings: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -158,11 +167,38 @@ internal fun FloatingAudioPlayer(
                 }
             }
 
+            // The player stays on screen after a failure so retrying is a single tap -- either
+            // this button or the play button above, both of which resume the item that failed.
+            if (error != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(error.message),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    if (error == PlaybackError.Credentials) {
+                        TextButton(onClick = onNavigateToListenSettings) {
+                            Text(stringResource(R.string.audio_player_error_open_settings))
+                        }
+                    }
+
+                    TextButton(onClick = onRetry) {
+                        Text(stringResource(R.string.audio_player_error_retry))
+                    }
+                }
+            }
             // Spoken articles have no seek bar: the player only ever knows the duration of the
             // current Passage, not the whole article. This is decided from the URI scheme, not
             // from missing duration metadata -- a podcast enclosure with no duration is still
             // scrubbable. See ADR-0001.
-            if (!audio.isSpokenArticle) {
+            else if (!audio.isSpokenArticle) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -239,8 +275,11 @@ private fun FloatingAudioPlayerPreview() {
             isPlaying = false,
             currentPosition = 120_000,
             duration = 3600_000,
+            error = null,
             onPlayPause = {},
             onSeek = {},
+            onRetry = {},
+            onNavigateToListenSettings = {},
             onDismiss = {},
         )
     }
@@ -261,8 +300,11 @@ private fun FloatingAudioPlayerPreview_Playing() {
             isPlaying = true,
             currentPosition = 1800_000,
             duration = 3600_000,
+            error = null,
             onPlayPause = {},
             onSeek = {},
+            onRetry = {},
+            onNavigateToListenSettings = {},
             onDismiss = {},
         )
     }
@@ -283,8 +325,61 @@ private fun FloatingAudioPlayerPreview_SpokenArticle() {
             isPlaying = true,
             currentPosition = 0,
             duration = 0,
+            error = null,
             onPlayPause = {},
             onSeek = {},
+            onRetry = {},
+            onNavigateToListenSettings = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun FloatingAudioPlayerPreview_CredentialsError() {
+    CapyTheme {
+        FloatingAudioPlayer(
+            audio = AudioEnclosure(
+                url = "capytts://abc123",
+                title = "How Capy Reader Handles Speech",
+                feedName = "The Verge",
+                durationSeconds = null,
+                artworkUrl = null,
+            ),
+            isPlaying = false,
+            currentPosition = 0,
+            duration = 0,
+            error = PlaybackError.Credentials,
+            onPlayPause = {},
+            onSeek = {},
+            onRetry = {},
+            onNavigateToListenSettings = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun FloatingAudioPlayerPreview_QuotaError() {
+    CapyTheme {
+        FloatingAudioPlayer(
+            audio = AudioEnclosure(
+                url = "capytts://abc123",
+                title = "How Capy Reader Handles Speech",
+                feedName = "The Verge",
+                durationSeconds = null,
+                artworkUrl = null,
+            ),
+            isPlaying = false,
+            currentPosition = 0,
+            duration = 0,
+            error = PlaybackError.Quota,
+            onPlayPause = {},
+            onSeek = {},
+            onRetry = {},
+            onNavigateToListenSettings = {},
             onDismiss = {},
         )
     }
@@ -305,8 +400,11 @@ private fun FloatingAudioPlayerPreview_DarkMode() {
             isPlaying = false,
             currentPosition = 0,
             duration = 7200_000,
+            error = null,
             onPlayPause = {},
             onSeek = {},
+            onRetry = {},
+            onNavigateToListenSettings = {},
             onDismiss = {},
         )
     }
