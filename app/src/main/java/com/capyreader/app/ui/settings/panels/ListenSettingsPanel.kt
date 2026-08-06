@@ -21,7 +21,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.capyreader.app.R
 import com.capyreader.app.common.RowItem
+import com.capyreader.app.ui.articles.audio.speech.OpenAISpeechProvider
+import com.capyreader.app.ui.articles.audio.speech.SpeechProvider
 import com.capyreader.app.ui.components.FormSection
+import com.capyreader.app.ui.settings.PreferenceSelect
 import com.capyreader.app.ui.theme.CapyTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -30,6 +33,8 @@ fun ListenSettingsPanel(
     viewModel: ListenSettingsViewModel = koinViewModel(),
 ) {
     ListenSettingsPanelView(
+        provider = viewModel.provider,
+        updateProvider = viewModel::updateProvider,
         apiKey = viewModel.apiKey,
         updateApiKey = viewModel::updateApiKey,
         voice = viewModel.voice,
@@ -39,6 +44,8 @@ fun ListenSettingsPanel(
 
 @Composable
 fun ListenSettingsPanelView(
+    provider: SpeechProvider,
+    updateProvider: (SpeechProvider) -> Unit,
     apiKey: String,
     updateApiKey: (String) -> Unit,
     voice: String,
@@ -48,7 +55,14 @@ fun ListenSettingsPanelView(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
-        FormSection(title = stringResource(R.string.settings_section_listen_openai)) {
+        FormSection(title = stringResource(R.string.settings_section_listen_speech)) {
+            PreferenceSelect(
+                selected = provider,
+                update = updateProvider,
+                options = SpeechProvider.all,
+                optionText = { stringResource(it.title) },
+                label = R.string.settings_listen_provider_label,
+            )
             RowItem {
                 TextField(
                     value = apiKey,
@@ -71,7 +85,7 @@ fun ListenSettingsPanelView(
                     onValueChange = updateVoice,
                     singleLine = true,
                     label = {
-                        Text(stringResource(R.string.settings_listen_voice_label))
+                        Text(stringResource(provider.voiceLabel))
                     },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done,
@@ -82,7 +96,10 @@ fun ListenSettingsPanelView(
             }
             RowItem {
                 Text(
-                    text = stringResource(R.string.settings_listen_disclosure),
+                    text = stringResource(
+                        R.string.settings_listen_disclosure,
+                        stringResource(provider.title),
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -97,6 +114,8 @@ fun ListenSettingsPanelView(
 private fun ListenSettingsPanelPreview() {
     CapyTheme {
         ListenSettingsPanelView(
+            provider = OpenAISpeechProvider,
+            updateProvider = {},
             apiKey = "sk-example",
             updateApiKey = {},
             voice = "alloy",

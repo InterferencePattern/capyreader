@@ -8,6 +8,7 @@ import com.capyreader.app.refresher.RefreshInterval
 import com.capyreader.app.ui.articles.ArticleListFontScale
 import com.capyreader.app.ui.articles.DefaultPaneExpansionIndex
 import com.capyreader.app.ui.articles.MarkReadPosition
+import com.capyreader.app.ui.articles.audio.speech.SpeechProvider
 import com.jocmp.capy.ArticleFilter
 import com.jocmp.capy.articles.FontOption
 import com.jocmp.capy.articles.FontSize
@@ -201,13 +202,17 @@ class AppPreferences(context: Context) {
 
     }
 
-    // Credentials for the single hardcoded Speech Provider (OpenAI). The feature is inert
-    // until both are set -- no article text is sent anywhere by default.
+    // Credentials are namespaced by Speech Provider, so switching provider and back does not
+    // mean re-entering them. The feature is inert until the selected provider has both -- no
+    // article text is sent anywhere by default.
     class SpeechOptions(private val preferenceStore: PreferenceStore) {
-        val apiKey: Preference<String>
-            get() = preferenceStore.getString("speech_openai_api_key")
+        val provider: Preference<String>
+            get() = preferenceStore.getString("speech_provider", SpeechProvider.default.id)
 
-        val voice: Preference<String>
-            get() = preferenceStore.getString("speech_voice")
+        fun getApiKey(provider: SpeechProvider): Preference<String> =
+            preferenceStore.getString("speech_${provider.id}_api_key")
+
+        fun getVoice(provider: SpeechProvider): Preference<String> =
+            preferenceStore.getString("speech_${provider.id}_voice")
     }
 }

@@ -26,6 +26,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+/**
+ * How far before the end of a Passage the next one is handed to the player. It covers the round
+ * trip to the Speech Provider -- a second or two before the first audio arrives, after which the
+ * rest streams faster than it plays -- while exposing only the last seconds of a Passage to being
+ * paid for and never heard. Handing over the whole article up front would instead risk a wasted
+ * Passage on every article abandoned midway. See ADR-0001.
+ *
+ * ponytail: a fixed lead rather than one measured from recent requests; raise it if Passage
+ * boundaries audibly gap on a slow connection.
+ */
+private const val PRELOAD_LEAD_MS = 10_000L
+
 class AudioPlayerController(
     private val context: Context,
 ) {
@@ -34,9 +46,9 @@ class AudioPlayerController(
     private var positionUpdateJob: Job? = null
     private val mainScope = CoroutineScope(Dispatchers.Main)
 
-    // Passages after the one playing. Only one is ever in the player, so the next is requested
-    // when playback reaches it rather than while the current one buffers -- abandoning a Spoken
-    // Article halfway never pays for the rest. See ADR-0001.
+    // Passages the player does not hold yet. Each is handed over shortly before the one before
+    // it ends rather than up front, so abandoning a Spoken Article halfway never pays for the
+    // rest of it. See ADR-0001.
     private var queuedUrls: List<String> = emptyList()
 
     private val _isPlaying = MutableStateFlow(false)
@@ -100,6 +112,9 @@ class AudioPlayerController(
                     _duration.value = controller.duration
                 }
                 if (playbackState == Player.STATE_ENDED) {
+                    // Normally empty by now -- [preloadNextPassage] hands each Passage over
+                    // before the one before it ends. This is the fallback for a Passage whose
+                    // length never became known, where the seam is audible but playback continues.
                     val nextUrl = queuedUrls.firstOrNull()
 
                     if (nextUrl == null) {
@@ -152,9 +167,29 @@ class AudioPlayerController(
         }
     }
 
+    /** Queues the next Passage when the current one is nearly over. No-op until its length is known. */
+    private fun preloadNextPassage(controller: MediaController) {
+        val nextUrl = queuedUrls.firstOrNull() ?: return
+        val duration = controller.duration
+
+        if (duration <= 0 || duration - controller.currentPosition > PRELOAD_LEAD_MS) {
+            return
+        }
+
+        queuedUrls = queuedUrls.drop(1)
+        controller.addMediaItem(mediaItem(url = nextUrl))
+    }
+
     private fun load(controller: MediaController, url: String) {
+        controller.setMediaItem(mediaItem(url = url))
+        controller.prepare()
+        controller.playWhenReady = true
+    }
+
+    private fun mediaItem(url: String): MediaItem {
         val audio = _currentAudio.value
-        val mediaItem = MediaItem.Builder()
+
+        return MediaItem.Builder()
             .setUri(url)
             // Pinned so a Spoken Article caches under its synthetic URI: the ResolvingDataSource
             // rewrites the URI upstream, and without this the key would follow it.
@@ -167,10 +202,6 @@ class AudioPlayerController(
                     .build()
             )
             .build()
-
-        controller.setMediaItem(mediaItem)
-        controller.prepare()
-        controller.playWhenReady = true
     }
 
     fun pause() {
@@ -253,6 +284,8 @@ class AudioPlayerController(
                     if (_duration.value == 0L && it.duration > 0) {
                         _duration.value = it.duration
                     }
+                    // Only runs while playing, which is exactly when a Passage is worth fetching.
+                    preloadNextPassage(it)
                 }
                 delay(500)
             }

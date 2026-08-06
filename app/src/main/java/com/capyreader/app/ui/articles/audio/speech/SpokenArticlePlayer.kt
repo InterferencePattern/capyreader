@@ -24,8 +24,9 @@ class SpokenArticlePlayer(
      */
     @StringRes
     fun play(article: Article): Int? {
-        val apiKey = appPreferences.speechOptions.apiKey.get()
-        val voice = appPreferences.speechOptions.voice.get()
+        val provider = SpeechProvider.from(appPreferences.speechOptions.provider.get())
+        val apiKey = appPreferences.speechOptions.getApiKey(provider).get()
+        val voice = appPreferences.speechOptions.getVoice(provider).get()
 
         // Inert without credentials: no request is built, so no article text leaves the device.
         if (apiKey.isBlank() || voice.isBlank()) {
@@ -38,7 +39,7 @@ class SpokenArticlePlayer(
             return R.string.listen_error_no_text
         }
 
-        val uris = OpenAISpeechProvider.registerPassages(
+        val uris = provider.registerPassages(
             passages = passages,
             voice = voice,
             apiKey = apiKey,

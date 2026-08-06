@@ -31,9 +31,12 @@ The player only ever knows the duration of the current passage, so **spoken arti
 bar** — play/pause and ±30s only, and ±30s cannot cross a passage boundary. This is why
 `FloatingAudioPlayer` branches on the URI scheme rather than on missing duration metadata.
 
-Whether a passage is fetched ahead of time is a property of the speech provider, not of the
-player: preloading is enabled for providers where an unheard passage costs approximately nothing
-and disabled for ones where it costs real money.
+Passages are fetched a fixed ten seconds before the one before them ends, for every speech
+provider. This supersedes the original plan of making preloading a per-provider property, which
+assumed some providers were cheap enough that an unheard passage did not matter: measured OpenAI
+billing put a passage at roughly five cents, an order of magnitude under ElevenLabs but not
+free. A ten-second lead covers the round trip to the provider while exposing only the last
+seconds of a passage to being paid for and never heard.
 
 The cache key is a hash of text, provider, voice, and model rather than the article ID, so
 changing any input misses the cache instead of serving audio that no longer matches the article.

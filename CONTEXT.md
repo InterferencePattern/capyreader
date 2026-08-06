@@ -47,8 +47,9 @@ _Avoid_: Chunk, segment, part
 
 **Speech Provider**:
 The third-party service that turns **Speakable Text** into audio. The user supplies their own
-credentials; Capy never brokers access. Providers differ in what a **Passage** costs, which is
-why Capy treats cheap and expensive providers differently.
+credentials; Capy never brokers access. Providers differ in what a **Passage** costs — an order
+of magnitude between them — but none is cheap enough to fetch a Passage the reader may never
+reach, so Capy fetches every Passage late whatever the provider.
 _Avoid_: TTS engine, backend, vendor
 
 **Voice**:
