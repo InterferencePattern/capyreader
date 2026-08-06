@@ -353,6 +353,8 @@
     <string name="audio_player_play">Play</string>
     <string name="audio_player_pause">Pause</string>
     <string name="audio_player_close">Close player</string>
+    <string name="audio_player_speed">%1$s×</string>
+    <string name="audio_player_speed_description">Playback speed, %1$s times. Tap to change.</string>
     <string name="audio_player_skip_back">Skip back 30 seconds</string>
     <string name="audio_player_skip_forward">Skip forward 30 seconds</string>
     <string name="audio_player_error_credentials">Playback failed. The API key was rejected.</string>

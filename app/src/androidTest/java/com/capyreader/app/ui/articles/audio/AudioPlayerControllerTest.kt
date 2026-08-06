@@ -3,6 +3,7 @@ package com.capyreader.app.ui.articles.audio
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.capyreader.app.common.AudioEnclosure
+import com.capyreader.app.preferences.AppPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -33,7 +34,7 @@ class AudioPlayerControllerTest {
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            controller = AudioPlayerController(context)
+            controller = AudioPlayerController(context, AppPreferences(context))
         }
     }
 

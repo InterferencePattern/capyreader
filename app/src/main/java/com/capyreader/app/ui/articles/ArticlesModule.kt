@@ -25,7 +25,8 @@ internal val articlesModule = module {
     }
     single {
         AudioPlayerController(
-            context = get()
+            context = get(),
+            appPreferences = get(),
         )
     }
     single {

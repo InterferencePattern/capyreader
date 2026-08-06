@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
@@ -61,6 +65,7 @@ fun FloatingAudioPlayer(
     val currentPosition by controller.currentPosition.collectAsState()
     val duration by controller.duration.collectAsState()
     val error by controller.playbackError.collectAsState()
+    val playbackSpeed by controller.playbackSpeed.collectAsState()
 
     FloatingAudioPlayer(
         audio = audio,
@@ -68,7 +73,9 @@ fun FloatingAudioPlayer(
         currentPosition = currentPosition,
         duration = duration,
         error = error,
+        playbackSpeed = playbackSpeed,
         onPlayPause = { if (isPlaying) controller.pause() else controller.resume() },
+        onCycleSpeed = { controller.setPlaybackSpeed(PlaybackSpeed.next(playbackSpeed)) },
         onSeek = { controller.seekTo(it) },
         onRetry = { controller.resume() },
         onNavigateToListenSettings = onNavigateToListenSettings,
@@ -85,7 +92,9 @@ internal fun FloatingAudioPlayer(
     currentPosition: Long,
     duration: Long,
     error: PlaybackError?,
+    playbackSpeed: Float,
     onPlayPause: () -> Unit,
+    onCycleSpeed: () -> Unit,
     onSeek: (Long) -> Unit,
     onRetry: () -> Unit,
     onNavigateToListenSettings: () -> Unit,
@@ -147,6 +156,26 @@ internal fun FloatingAudioPlayer(
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                // Tapping cycles rather than opening a menu: every speed is two or three taps
+                // away, and the row has no space for a fourth control that opens something.
+                val speedLabel = PlaybackSpeed.label(playbackSpeed)
+                val speedDescription =
+                    stringResource(R.string.audio_player_speed_description, speedLabel)
+                TextButton(
+                    onClick = onCycleSpeed,
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    modifier = Modifier
+                        .widthIn(min = 48.dp)
+                        .semantics {
+                            contentDescription = speedDescription
+                        },
+                ) {
+                    Text(
+                        text = stringResource(R.string.audio_player_speed, speedLabel),
+                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
 
@@ -276,7 +305,9 @@ private fun FloatingAudioPlayerPreview() {
             currentPosition = 120_000,
             duration = 3600_000,
             error = null,
+            playbackSpeed = 1f,
             onPlayPause = {},
+            onCycleSpeed = {},
             onSeek = {},
             onRetry = {},
             onNavigateToListenSettings = {},
@@ -301,7 +332,9 @@ private fun FloatingAudioPlayerPreview_Playing() {
             currentPosition = 1800_000,
             duration = 3600_000,
             error = null,
+            playbackSpeed = 1f,
             onPlayPause = {},
+            onCycleSpeed = {},
             onSeek = {},
             onRetry = {},
             onNavigateToListenSettings = {},
@@ -326,7 +359,9 @@ private fun FloatingAudioPlayerPreview_SpokenArticle() {
             currentPosition = 0,
             duration = 0,
             error = null,
+            playbackSpeed = 1.75f,
             onPlayPause = {},
+            onCycleSpeed = {},
             onSeek = {},
             onRetry = {},
             onNavigateToListenSettings = {},
@@ -351,7 +386,9 @@ private fun FloatingAudioPlayerPreview_CredentialsError() {
             currentPosition = 0,
             duration = 0,
             error = PlaybackError.Credentials,
+            playbackSpeed = 1f,
             onPlayPause = {},
+            onCycleSpeed = {},
             onSeek = {},
             onRetry = {},
             onNavigateToListenSettings = {},
@@ -376,7 +413,9 @@ private fun FloatingAudioPlayerPreview_QuotaError() {
             currentPosition = 0,
             duration = 0,
             error = PlaybackError.Quota,
+            playbackSpeed = 1f,
             onPlayPause = {},
+            onCycleSpeed = {},
             onSeek = {},
             onRetry = {},
             onNavigateToListenSettings = {},
@@ -401,7 +440,9 @@ private fun FloatingAudioPlayerPreview_DarkMode() {
             currentPosition = 0,
             duration = 7200_000,
             error = null,
+            playbackSpeed = 1f,
             onPlayPause = {},
+            onCycleSpeed = {},
             onSeek = {},
             onRetry = {},
             onNavigateToListenSettings = {},

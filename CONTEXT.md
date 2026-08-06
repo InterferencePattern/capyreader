@@ -61,6 +61,14 @@ Whether Voices can be listed is a property of the provider, not of Capy: some se
 publish one only as documentation, and a server at an address the reader supplies may offer
 neither, which is why a Voice can always be typed in by hand.
 
+**Playback Speed**:
+How fast the player plays audio it already holds, whatever its origin. Local to Capy: changing it
+reaches no **Speech Provider**, costs nothing, applies to cached audio, and is deliberately not
+part of the media cache key — two listens at different speeds are the same synthesized audio. It
+belongs to listening rather than to either origin, so one setting covers **Enclosures** and
+**Spoken Articles** alike, and it survives restarts.
+_Avoid_: Rate, tempo
+
 **Sample**:
 A short fixed sentence spoken in one **Voice** so the reader can hear it before committing.
 Deliberately outside the media pipeline — a Sample never touches the media session, so it cannot

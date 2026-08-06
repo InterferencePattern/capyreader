@@ -8,6 +8,7 @@ import com.capyreader.app.refresher.RefreshInterval
 import com.capyreader.app.ui.articles.ArticleListFontScale
 import com.capyreader.app.ui.articles.DefaultPaneExpansionIndex
 import com.capyreader.app.ui.articles.MarkReadPosition
+import com.capyreader.app.ui.articles.audio.PlaybackSpeed
 import com.capyreader.app.ui.articles.audio.speech.SpeechProvider
 import com.jocmp.capy.ArticleFilter
 import com.jocmp.capy.articles.FontOption
@@ -87,6 +88,11 @@ class AppPreferences(context: Context) {
 
     val badgeStyle: Preference<BadgeStyle>
         get() = preferenceStore.getEnum("badge_style", BadgeStyle.default)
+
+    // Shared by Enclosures and Spoken Articles: it is a property of listening, not of either
+    // origin, and the player they share is where it is set.
+    val playbackSpeed: Preference<Float>
+        get() = preferenceStore.getFloat("audio_playback_speed", PlaybackSpeed.DEFAULT)
 
     fun clearAll() {
         preferenceStore.clearAll()

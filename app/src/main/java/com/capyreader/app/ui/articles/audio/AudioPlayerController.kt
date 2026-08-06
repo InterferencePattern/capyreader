@@ -14,6 +14,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.capyreader.app.common.AudioEnclosure
+import com.capyreader.app.preferences.AppPreferences
 import com.google.common.util.concurrent.ListenableFuture
 import com.jocmp.capy.logging.CapyLog
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +41,10 @@ private const val PRELOAD_LEAD_MS = 10_000L
 
 class AudioPlayerController(
     private val context: Context,
+    appPreferences: AppPreferences,
 ) {
+    private val speedPreference = appPreferences.playbackSpeed
+
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
     private var positionUpdateJob: Job? = null
@@ -65,6 +69,9 @@ class AudioPlayerController(
 
     private val _playbackError = MutableStateFlow<PlaybackError?>(null)
     val playbackError: StateFlow<PlaybackError?> = _playbackError.asStateFlow()
+
+    private val _playbackSpeed = MutableStateFlow(speedPreference.get())
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
 
     private fun ensureController(onReady: (MediaController) -> Unit) {
         mediaController?.let {
@@ -182,6 +189,8 @@ class AudioPlayerController(
 
     private fun load(controller: MediaController, url: String) {
         controller.setMediaItem(mediaItem(url = url))
+        // Re-applied per item so a session the service rebuilt still starts at the saved speed.
+        controller.setPlaybackSpeed(_playbackSpeed.value)
         controller.prepare()
         controller.playWhenReady = true
     }
@@ -221,6 +230,20 @@ class AudioPlayerController(
             }
 
             mediaController?.play()
+        }
+    }
+
+    /**
+     * Takes effect on the audio the player already holds: nothing is re-synthesized, no request
+     * reaches the Speech Provider, and the media cache key is untouched. Pitch is preserved by the
+     * player's own time-stretching.
+     */
+    fun setPlaybackSpeed(speed: Float) {
+        _playbackSpeed.value = speed
+        speedPreference.set(speed)
+
+        mainScope.launch {
+            mediaController?.setPlaybackSpeed(speed)
         }
     }
 
