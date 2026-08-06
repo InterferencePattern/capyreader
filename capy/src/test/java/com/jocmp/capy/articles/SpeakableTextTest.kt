@@ -157,4 +157,12 @@ class PassagesTest {
 
         assertEquals(listOf("aaaaaaaaaa", "aaaaaaaaaa", "aaaaa"), result)
     }
+
+    @Test
+    fun `rounds a spoken estimate up to the minute`() {
+        assertEquals(1, spokenMinutes(1))
+        assertEquals(1, spokenMinutes(1_000))
+        assertEquals(2, spokenMinutes(1_001))
+        assertEquals(4, spokenMinutes(MAX_PASSAGE_LENGTH))
+    }
 }

@@ -242,6 +242,11 @@
 
     <string name="article_bottom_bar_next_article">Go to next article</string>
     <string name="article_bottom_bar_listen">Listen</string>
+    <plurals name="article_bottom_bar_listen_estimate">
+        <item quantity="one">Listen, about %1$d minute, %2$s characters</item>
+        <item quantity="many">Listen, about %1$d minutes, %2$s characters</item>
+        <item quantity="other">Listen, about %1$d minutes, %2$s characters</item>
+    </plurals>
     <string name="settings_gestures_reader_swipe_down">Swipe Down</string>
     <string name="settings_gestures_reader_swipe_up">Swipe Up</string>
     <string name="settings_gestures_list_row_swipe_start">Swipe Right</string>

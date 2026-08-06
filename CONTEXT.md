@@ -69,6 +69,15 @@ belongs to listening rather than to either origin, so one setting covers **Enclo
 **Spoken Articles** alike, and it survives restarts.
 _Avoid_: Rate, tempo
 
+**Length Estimate**:
+How many characters of **Speakable Text** an **Article** holds and roughly how long they take to
+say, shown on the Listen control before anything is synthesized. Characters are the honest figure
+because **Speech Providers** bill by them; duration is the one a listener cares about. Both are
+computed from text already on the device, so seeing them costs nothing, and both follow **Full
+Content** — turning it on changes the article and so changes the estimate. Never a price: Capy
+does not model any provider's pricing tiers.
+_Avoid_: Cost, quote, reading time
+
 **Sample**:
 A short fixed sentence spoken in one **Voice** so the reader can hear it before committing.
 Deliberately outside the media pipeline — a Sample never touches the media session, so it cannot

@@ -4,11 +4,23 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.text.BreakIterator
 import java.util.Locale
+import kotlin.math.ceil
 
 private const val BLOCK_SEPARATOR = "\n\n"
 
 // Comfortably under OpenAI's 4,096-character ceiling; roughly four minutes of speech.
 const val MAX_PASSAGE_LENGTH = 4_000
+
+// The rate that makes MAX_PASSAGE_LENGTH four minutes. Voices differ, so this is an estimate
+// and only ever presented as one.
+private const val CHARACTERS_PER_MINUTE = 1_000
+
+/**
+ * Roughly how long Speakable Text of [characterCount] characters takes to say, rounded up to the
+ * minute. Derived from the count alone, so producing it reaches no Speech Provider.
+ */
+fun spokenMinutes(characterCount: Int): Int =
+    ceil(characterCount / CHARACTERS_PER_MINUTE.toDouble()).toInt().coerceAtLeast(1)
 
 /**
  * Walks an article's markup into blocks -- headings, paragraphs, list items, blockquotes --

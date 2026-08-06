@@ -26,11 +26,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,11 @@ import com.capyreader.app.ui.components.ToolbarTooltip
 import com.jocmp.capy.Article
 import com.jocmp.capy.Article.FullContentState.LOADED
 import com.jocmp.capy.Article.FullContentState.LOADING
+import com.jocmp.capy.articles.speakableText
+import com.jocmp.capy.articles.spokenMinutes
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.NumberFormat
 
 private val slideSpec = spring<IntOffset>(stiffness = 700f)
 
@@ -136,14 +144,16 @@ fun ArticleBottomBar(
                         }
                     }
                 }
+                val listenLabel = listenLabel(article.content)
+
                 ToolbarTooltip(
                     positioning = TooltipAnchorPosition.Above,
-                    message = stringResource(R.string.article_bottom_bar_listen)
+                    message = listenLabel
                 ) {
                     IconButton(onClick = { onListen() }) {
                         Icon(
                             Icons.Rounded.Headphones,
-                            contentDescription = stringResource(R.string.article_bottom_bar_listen),
+                            contentDescription = listenLabel,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -163,6 +173,33 @@ fun ArticleBottomBar(
             }
         }
     }
+}
+
+/**
+ * "Listen", plus how much of it there is: the character count a Speech Provider bills for and
+ * the duration a listener actually cares about. Both come from the article the reader is
+ * currently showing, so turning on Full Content changes them, and neither costs a request.
+ */
+@Composable
+private fun listenLabel(content: String): String {
+    // Off the main thread: the parse is cheap but a long article would still stutter the
+    // toolbar's slide-in. Until it lands the button reads plainly, and tapping it works either way.
+    val characters by produceState(0, content) {
+        value = withContext(Dispatchers.Default) { speakableText(content).length }
+    }
+
+    if (characters == 0) {
+        return stringResource(R.string.article_bottom_bar_listen)
+    }
+
+    val minutes = spokenMinutes(characters)
+
+    return pluralStringResource(
+        R.plurals.article_bottom_bar_listen_estimate,
+        minutes,
+        minutes,
+        NumberFormat.getIntegerInstance().format(characters),
+    )
 }
 
 @Composable
