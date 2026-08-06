@@ -57,6 +57,18 @@ _Avoid_: TTS engine, backend, vendor
 **Voice**:
 The named or identified speaker a **Speech Provider** uses. Distinct from playback speed, which
 Capy applies locally to already-synthesized audio and which therefore costs nothing to change.
+Whether Voices can be listed is a property of the provider, not of Capy: some serve a list, some
+publish one only as documentation, and a server at an address the reader supplies may offer
+neither, which is why a Voice can always be typed in by hand.
+
+**Sample**:
+A short fixed sentence spoken in one **Voice** so the reader can hear it before committing.
+Deliberately outside the media pipeline — a Sample never touches the media session, so it cannot
+interrupt an **Enclosure** or a **Spoken Article**. The sentence is the same for every Voice, so
+two Voices are compared on the speaker rather than on the words; free preview audio a provider
+already publishes is not used for this reason. A Sample is therefore always a synthesis request
+the reader pays for, and never automatic.
+_Avoid_: Preview, demo, test
 
 ## Flagged ambiguities
 

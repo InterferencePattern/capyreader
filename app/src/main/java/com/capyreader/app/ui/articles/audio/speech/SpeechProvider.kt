@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.capyreader.app.R
 import com.capyreader.app.common.MD5
 import com.capyreader.app.common.SPOKEN_ARTICLE_SCHEME
+import okhttp3.OkHttpClient
 
 /**
  * Everything the reader configures about a Speech Provider. Providers use the parts they have a
@@ -14,6 +15,12 @@ data class SpeechSettings(
     val voice: String,
     val apiKey: String,
     val baseUrl: String = "",
+)
+
+/** A Voice the reader can pick by name instead of by identifier. */
+data class SpeechVoice(
+    val id: String,
+    val name: String,
 )
 
 /**
@@ -45,6 +52,20 @@ interface SpeechProvider {
     /** Whether the reader supplies the endpoint. Only true for a provider Capy cannot name. */
     val usesBaseUrl: Boolean
         get() = false
+
+    /**
+     * Whether [voices] has anything to offer. False for a provider whose Voices cannot be known
+     * in advance, where the reader types an identifier instead.
+     */
+    val listsVoices: Boolean
+        get() = false
+
+    /**
+     * The Voices to choose among. Only called when the reader asks for the list, and throws on a
+     * failed request so the caller can tell a rejected key from an empty library.
+     */
+    suspend fun voices(settings: SpeechSettings, client: OkHttpClient): List<SpeechVoice> =
+        emptyList()
 
     /** Everything besides the text that determines the audio: model, voice, tone. */
     fun audioSignature(settings: SpeechSettings): String

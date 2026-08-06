@@ -14,5 +14,6 @@ the playback architecture is fixed by [ADR-0001](../adr/0001-speech-through-the-
 | [06](./06-voice-picker.md) | Voice list and sample playback | HITL | 04 |
 | [07](./07-playback-speed.md) | Playback speed control | HITL | 01 |
 | [08](./08-length-estimate.md) | Length and cost estimate | AFK | 02 |
+| [09](./09-compatible-voice-probe.md) | Voice listing for OpenAI-compatible servers | AFK | 06 |
 
 Slice 01 unblocks everything. 03 and 07 can run in parallel with 02.

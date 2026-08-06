@@ -1,6 +1,8 @@
 package com.capyreader.app.ui.articles.audio.speech
 
 import com.capyreader.app.R
+import kotlinx.coroutines.test.runTest
+import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -148,6 +150,47 @@ class SpeechProviderTest {
             R.string.listen_error_missing_credentials,
             OpenAISpeechProvider.configurationError(settings(apiKey = ""))
         )
+    }
+
+    @Test
+    fun elevenLabsVoices_readsNamesOutOfTheList() {
+        val voices = ElevenLabsSpeechProvider.parseVoices(
+            """
+            {"voices": [
+              {"voice_id": "abc123", "name": "Rachel", "preview_url": "https://storage.example/a.mp3", "category": "premade"},
+              {"voice_id": "def456", "name": "", "labels": {}}
+            ]}
+            """
+        )
+
+        assertEquals(2, voices.size)
+        assertEquals(SpeechVoice("abc123", "Rachel"), voices.first())
+        // A nameless voice is still selectable: the identifier is the only label left to show.
+        assertEquals(SpeechVoice("def456", "def456"), voices.last())
+    }
+
+    @Test
+    fun elevenLabsVoices_survivesAResponseWithoutVoices() {
+        assertEquals(emptyList<SpeechVoice>(), ElevenLabsSpeechProvider.parseVoices("""{"detail": "nope"}"""))
+        // An entry with no identifier cannot be played, so it is dropped rather than shown.
+        assertEquals(
+            emptyList<SpeechVoice>(),
+            ElevenLabsSpeechProvider.parseVoices("""{"voices": [{"name": "Nameless"}]}"""),
+        )
+    }
+
+    @Test
+    fun openAIVoices_areListedWithoutAKey() = runTest {
+        val voices = OpenAISpeechProvider.voices(settings(apiKey = ""), OkHttpClient())
+
+        assertTrue(voices.any { it.id == "alloy" && it.name == "Alloy" })
+    }
+
+    @Test
+    fun openAICompatible_leavesTheReaderTyping() {
+        assertTrue(OpenAISpeechProvider.listsVoices)
+        assertTrue(ElevenLabsSpeechProvider.listsVoices)
+        assertEquals(false, OpenAICompatibleSpeechProvider.listsVoices)
     }
 
     @Test

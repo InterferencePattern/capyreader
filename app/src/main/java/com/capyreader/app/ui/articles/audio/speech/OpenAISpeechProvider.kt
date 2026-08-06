@@ -3,6 +3,7 @@ package com.capyreader.app.ui.articles.audio.speech
 import com.capyreader.app.R
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import okhttp3.OkHttpClient
 
 object OpenAISpeechProvider : SpeechProvider {
     private const val ENDPOINT = "https://api.openai.com/v1/audio/speech"
@@ -23,6 +24,21 @@ object OpenAISpeechProvider : SpeechProvider {
     override val title = R.string.settings_listen_provider_openai
 
     override val voiceLabel = R.string.settings_listen_voice_label
+
+    // The roster OpenAI documents for MODEL. `tts-1` supports only nine of these, which is not our
+    // problem: this provider always sends MODEL.
+    private val VOICES = listOf(
+        "alloy", "ash", "ballad", "cedar", "coral", "echo", "fable",
+        "marin", "nova", "onyx", "sage", "shimmer", "verse",
+    )
+
+    override val listsVoices = true
+
+    // Nothing to fetch: OpenAI publishes the list in its documentation and serves it from no
+    // endpoint, so this drifts only when they ship a voice. The client is unused, and no key is
+    // needed to see the names -- only to hear them.
+    override suspend fun voices(settings: SpeechSettings, client: OkHttpClient) =
+        VOICES.map { SpeechVoice(id = it, name = it.replaceFirstChar(Char::uppercase)) }
 
     override fun audioSignature(settings: SpeechSettings) =
         "$MODEL|${settings.voice}|$INSTRUCTIONS"
