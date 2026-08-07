@@ -57,6 +57,7 @@ fun ListenSettingsPanel(
         baseUrl = viewModel.baseUrl,
         updateBaseUrl = viewModel::updateBaseUrl,
         voiceList = viewModel.voiceList,
+        canListVoices = viewModel.canListVoices,
         loadVoices = viewModel::loadVoices,
         playSample = viewModel::playSample,
         sampleError = viewModel.sampleError,
@@ -74,6 +75,7 @@ fun ListenSettingsPanelView(
     baseUrl: String,
     updateBaseUrl: (String) -> Unit,
     voiceList: VoiceListState,
+    canListVoices: Boolean,
     loadVoices: () -> Unit,
     playSample: (SpeechVoice) -> Unit,
     @StringRes sampleError: Int?,
@@ -147,7 +149,9 @@ fun ListenSettingsPanelView(
             if (provider.listsVoices) {
                 VoiceList(
                     state = voiceList,
-                    hasCredentials = apiKey.isNotBlank(),
+                    canListVoices = canListVoices,
+                    requirementLabel = provider.voicesRequirementLabel,
+                    emptyLabel = provider.voicesEmptyLabel,
                     selectedVoice = voice,
                     selectVoice = updateVoice,
                     loadVoices = loadVoices,
@@ -174,13 +178,18 @@ fun ListenSettingsPanelView(
 }
 
 /**
- * Four states the reader can tell apart: no key to list with, listing, nothing to list, and a
+ * Four states the reader can tell apart: nothing to list with, listing, nothing to list, and a
  * listing that failed. Each is a sentence rather than a spinner that stops, since the fix differs.
+ * What is missing and what "nothing to list" means both belong to the provider -- a named one is
+ * waiting on a key and comes back with an empty account, a self-hosted one is waiting on an
+ * address and comes back with no route to ask.
  */
 @Composable
 private fun VoiceList(
     state: VoiceListState,
-    hasCredentials: Boolean,
+    canListVoices: Boolean,
+    @StringRes requirementLabel: Int,
+    @StringRes emptyLabel: Int,
     selectedVoice: String,
     selectVoice: (String) -> Unit,
     loadVoices: () -> Unit,
@@ -189,8 +198,8 @@ private fun VoiceList(
 ) {
     RowItem {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (!hasCredentials) {
-                Hint(stringResource(R.string.settings_listen_voices_need_key))
+            if (!canListVoices) {
+                Hint(stringResource(requirementLabel))
                 return@Column
             }
 
@@ -204,7 +213,7 @@ private fun VoiceList(
                     Hint(stringResource(R.string.settings_listen_voices_loading))
                 }
 
-                is VoiceListState.Empty -> Hint(stringResource(R.string.settings_listen_voices_empty))
+                is VoiceListState.Empty -> Hint(stringResource(emptyLabel))
                 is VoiceListState.Failed -> Hint(stringResource(R.string.settings_listen_voices_failed))
                 is VoiceListState.Loaded -> {
                     state.voices.forEach { voice ->
@@ -304,6 +313,7 @@ private fun ListenSettingsPanelPreview() {
                     SpeechVoice(id = "sage", name = "Sage"),
                 ),
             ),
+            canListVoices = true,
             loadVoices = {},
             playSample = {},
             sampleError = null,

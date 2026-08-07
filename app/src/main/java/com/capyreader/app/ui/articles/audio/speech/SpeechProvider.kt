@@ -54,11 +54,19 @@ interface SpeechProvider {
         get() = false
 
     /**
-     * Whether [voices] has anything to offer. False for a provider whose Voices cannot be known
-     * in advance, where the reader types an identifier instead.
+     * Whether [voices] might have anything to offer. False for a provider that can never
+     * enumerate, where the reader types an identifier instead.
      */
     val listsVoices: Boolean
         get() = false
+
+    /** What the reader must supply before [voices] is worth asking for. */
+    fun canListVoices(settings: SpeechSettings): Boolean = settings.apiKey.isNotBlank()
+
+    /** Says what [canListVoices] is waiting for. */
+    @get:StringRes
+    val voicesRequirementLabel: Int
+        get() = R.string.settings_listen_voices_need_key
 
     /**
      * The Voices to choose among. Only called when the reader asks for the list, and throws on a
@@ -66,6 +74,14 @@ interface SpeechProvider {
      */
     suspend fun voices(settings: SpeechSettings, client: OkHttpClient): List<SpeechVoice> =
         emptyList()
+
+    /**
+     * Said when [voices] comes back with nothing. A named provider's empty list means an empty
+     * account; a server the reader supplied more likely just has no route to ask.
+     */
+    @get:StringRes
+    val voicesEmptyLabel: Int
+        get() = R.string.settings_listen_voices_empty
 
     /** Everything besides the text that determines the audio: model, voice, tone. */
     fun audioSignature(settings: SpeechSettings): String

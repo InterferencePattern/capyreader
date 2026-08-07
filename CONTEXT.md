@@ -59,7 +59,8 @@ The named or identified speaker a **Speech Provider** uses. Distinct from playba
 Capy applies locally to already-synthesized audio and which therefore costs nothing to change.
 Whether Voices can be listed is a property of the provider, not of Capy: some serve a list, some
 publish one only as documentation, and a server at an address the reader supplies may offer
-neither, which is why a Voice can always be typed in by hand.
+neither, which is why a Voice can always be typed in by hand. Where a list might exist, Capy asks
+and accepts what comes back; a server that cannot answer is the ordinary case, not a failure.
 
 **Playback Speed**:
 How fast the player plays audio it already holds, whatever its origin. Local to Capy: changing it

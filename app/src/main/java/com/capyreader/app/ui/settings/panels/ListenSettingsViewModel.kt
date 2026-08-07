@@ -84,7 +84,14 @@ class ListenSettingsViewModel(
         appPreferences.speechOptions.getBaseUrl(provider).set(value)
 
         baseUrl = value
+
+        // A list belongs to the server it came from, and the reader just named a different one.
+        resetVoiceList()
     }
+
+    /** Whether the provider has what it needs to enumerate -- a key, an address, or nothing. */
+    val canListVoices
+        get() = provider.canListVoices(settings)
 
     fun loadVoices() {
         voiceList = VoiceListState.Loading

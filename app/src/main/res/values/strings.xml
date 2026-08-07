@@ -387,6 +387,8 @@
     <string name="settings_listen_voices_loading">Loading voices…</string>
     <string name="settings_listen_voices_need_key">Add an API key to load the list of voices.</string>
     <string name="settings_listen_voices_empty">This account has no voices to choose from.</string>
+    <string name="settings_listen_voices_unlisted">This server doesn\'t list its voices. Enter one above.</string>
+    <string name="settings_listen_voices_need_url">Add a base URL to load the list of voices.</string>
     <string name="settings_listen_voices_failed">Couldn\'t load voices. Check your API key and connection, or enter a voice above.</string>
     <string name="settings_listen_voice_sample">Play a sample of %1$s</string>
     <string name="settings_listen_sample_cost">Each sample sends a short request to the provider and counts toward your usage.</string>

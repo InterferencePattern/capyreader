@@ -187,10 +187,50 @@ class SpeechProviderTest {
     }
 
     @Test
-    fun openAICompatible_leavesTheReaderTyping() {
-        assertTrue(OpenAISpeechProvider.listsVoices)
-        assertTrue(ElevenLabsSpeechProvider.listsVoices)
-        assertEquals(false, OpenAICompatibleSpeechProvider.listsVoices)
+    fun openAICompatibleVoices_acceptsBareStrings() {
+        assertEquals(
+            listOf(SpeechVoice(id = "af_bella", name = "af_bella")),
+            OpenAICompatibleSpeechProvider.parseVoices("""{"voices": ["af_bella"]}"""),
+        )
+        assertEquals(
+            listOf(SpeechVoice(id = "am_adam", name = "am_adam")),
+            OpenAICompatibleSpeechProvider.parseVoices("""["am_adam"]"""),
+        )
+    }
+
+    @Test
+    fun openAICompatibleVoices_acceptsObjectsWithAnIdAndAName() {
+        assertEquals(
+            listOf(SpeechVoice(id = "en-US-AvaNeural", name = "Ava")),
+            OpenAICompatibleSpeechProvider.parseVoices(
+                """{"data": [{"id": "en-US-AvaNeural", "name": "Ava"}]}"""
+            ),
+        )
+    }
+
+    @Test
+    fun openAICompatibleVoices_fallBackToNothingOnAnUnknownShape() {
+        // A server with no route, a reverse proxy answering in HTML, and a shape nobody
+        // recognizes are one thing to the reader: no list, and the text field still works.
+        listOf("", "<html><body>404 not found</body></html>", """{"error": "nope"}""", "[[]]")
+            .forEach { body ->
+                assertEquals(
+                    emptyList<SpeechVoice>(),
+                    OpenAICompatibleSpeechProvider.parseVoices(body),
+                )
+            }
+    }
+
+    @Test
+    fun openAICompatible_listsOnAnAddressRatherThanAKey() {
+        assertTrue(OpenAICompatibleSpeechProvider.listsVoices)
+        assertTrue(
+            OpenAICompatibleSpeechProvider.canListVoices(settings(apiKey = "")),
+        )
+        assertEquals(
+            false,
+            OpenAICompatibleSpeechProvider.canListVoices(settings(baseUrl = "not an address")),
+        )
     }
 
     @Test
